@@ -1,0 +1,123 @@
+{% extends "base.html" %}{% block title %}Mes comptes{% endblock %}
+{% block body %}
+<div class="page-header">
+  <h1>Bonjour, {{ nav_name.split(' ')[0] }} 👋</h1>
+  <div class="meta">Voici la synthèse de vos comptes</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="label">Solde total</div><div class="value">{{ "%.2f"|format(total) }} MAD</div></div>
+  <div class="kpi"><div class="label">Comptes</div><div class="value">{{ accounts|length }}</div></div>
+  <div class="kpi"><div class="label">Bénéficiaires</div><div class="value">{{ benefs|length }}</div></div>
+  <div class="kpi"><div class="label">Prêts actifs</div><div class="value">{{ loans|length }}</div></div>
+</div>
+
+<div class="accounts-row">
+  {% for a in accounts %}
+  <div class="acct-card">
+    <div class="type">{{ a.account_type }}</div>
+    <div class="num">{{ a.account_number }}</div>
+    <div class="bal">{{ "%.2f"|format(a.balance) }} <span class="cur">{{ a.currency }}</span></div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Nouveau virement</h2></div>
+  <div class="panel-body">
+    <form method="post" action="{{ url_for('transfer') }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <input type="hidden" name="op_token" value="{{ op_token }}">
+      <div class="form-grid">
+        <div>
+          <label class="field-label">Compte source</label>
+          <select class="input" name="sender">
+            {% for a in accounts %}<option value="{{ a.account_id }}">{{ a.account_number }} — {{ "%.2f"|format(a.balance) }} {{ a.currency }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Bénéficiaire</label>
+          <select class="input" name="receiver">
+            {% for b in benefs %}<option value="{{ b.account_number }}">{{ b.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Montant (MAD)</label>
+          <input class="input" name="amount" placeholder="0.00" inputmode="decimal" required>
+        </div>
+        <div>
+          <label class="field-label">Motif (optionnel)</label>
+          <input class="input" name="description" placeholder="Virement" maxlength="200">
+        </div>
+        <div><button class="btn btn-primary btn-block" type="submit">Envoyer</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Dernières opérations</h2><span class="count">{{ txns|length }}</span></div>
+  <div class="panel-body">
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>Type</th><th>Description</th><th style="text-align:right">Montant</th></tr></thead>
+      <tbody>
+        {% for t in txns %}
+        <tr>
+          <td class="mono">{{ t.transaction_date.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>
+            {% if t.transaction_type in ('DEPOSIT', 'TRANSFER_IN') %}<span class="badge badge-green">{{ t.transaction_type }}</span>
+            {% else %}<span class="badge badge-red">{{ t.transaction_type }}</span>{% endif %}
+          </td>
+          <td>{{ t.description or '—' }}</td>
+          <td class="num-cell" style="color: {{ 'var(--green)' if t.transaction_type in ('DEPOSIT','TRANSFER_IN') else 'var(--red)' }}">
+            {{ '+' if t.transaction_type in ('DEPOSIT','TRANSFER_IN') else '−' }}{{ "%.2f"|format(t.amount) }}
+          </td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="4">Aucune opération pour le moment</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="accounts-row" style="grid-template-columns: 1fr 1fr;">
+  <div class="panel" style="margin-bottom:0;">
+    <div class="panel-head"><h2>Bénéficiaires</h2><span class="count">{{ benefs|length }}</span></div>
+    <div class="panel-body">
+      <table class="tbl">
+        <tbody>
+          {% for b in benefs %}
+          <tr><td>{{ b.name }}</td><td class="mono" style="text-align:right">{{ b.account_number }}</td></tr>
+          {% else %}
+          <tr class="empty-row"><td>Aucun bénéficiaire enregistré</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:0;">
+    <div class="panel-head"><h2>Mes prêts</h2><span class="count">{{ loans|length }}</span></div>
+    <div class="panel-body">
+      <table class="tbl">
+        <tbody>
+          {% for l in loans %}
+          <tr>
+            <td>{{ "%.0f"|format(l.amount) }} MAD <span style="color:var(--gray)">· {{ l.interest_rate }}%</span></td>
+            <td style="text-align:right">
+              {% if l.status == 'ACTIVE' %}<span class="badge badge-green">Actif</span>
+              {% elif l.status == 'PENDING' %}<span class="badge badge-amber">En attente</span>
+              {% else %}<span class="badge badge-gray">{{ l.status }}</span>{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr class="empty-row"><td>Aucun prêt</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="foot">🔒 Isolation garantie par Row-Level Security — vous ne voyez que vos propres comptes et opérations.</div>
+{% endblock %}

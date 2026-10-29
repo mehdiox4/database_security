@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% block title %}Connexion{% endblock %}
+{% block body %}
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="logo-row">
+      <img src="{{ url_for('static', filename='uir_logo.png') }}" alt="Université Internationale de Rabat">
+    </div>
+    <h1>Demo Bank</h1>
+    <div class="tagline">Banking and Account Management System — Database Security</div>
+
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for c, m in msgs %}
+      <div class="alert alert-{{ c }}">{% if c == 'danger' %}⛔{% else %}⚠️{% endif %}<div>{{ m }}</div></div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <label class="field-label" for="username">Nom d'utilisateur</label>
+      <input class="input" id="username" name="username" placeholder="client_amine"
+             autocomplete="username" required maxlength="40" style="margin-bottom:14px;">
+      <label class="field-label" for="password">Mot de passe</label>
+      <input class="input" id="password" type="password" name="password" placeholder="••••••••••••"
+             autocomplete="current-password" required style="margin-bottom:18px;">
+      <button class="btn btn-primary btn-block" type="submit">Se connecter</button>
+    </form>
+
+    <div class="lock-note">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      Connexion chiffrée · Argon2id · verrouillage après 5 échecs
+    </div>
+
+    <div class="demo-box">
+      <strong>Comptes de démonstration</strong> (mot de passe : <code>Bank@Demo2026!</code>)<br>
+      client_amine, client_sara, client_hamza, client_imane, client_reda · employee01,
+      employee02 · manager01 · admin01 · auditor01
+    </div>
+  </div>
+</div>
+{% endblock %}

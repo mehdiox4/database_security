@@ -1,0 +1,61 @@
+{% extends "base.html" %}{% block title %}Sécurité{% endblock %}
+{% block body %}
+<div class="page-header">
+  <h1>Tableau de bord sécurité</h1>
+  <div class="meta">Connexions et alertes</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi accent-green"><div class="label">Connexions réussies</div><div class="value">{{ stats.ok }}</div></div>
+  <div class="kpi accent-red"><div class="label">Échecs de connexion</div><div class="value">{{ stats.failed }}</div></div>
+  <div class="kpi accent-{{ 'amber' if alerts|length else 'green' }}"><div class="label">Alertes</div><div class="value">{{ alerts|length }}</div></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Tentatives de connexion récentes</h2><span class="count">{{ attempts|length }}</span></div>
+  <div class="panel-body">
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>Utilisateur</th><th>Adresse IP</th><th>Résultat</th></tr></thead>
+      <tbody>
+        {% for t in attempts %}
+        <tr>
+          <td class="mono">{{ t.attempted_at.strftime('%d/%m %H:%M:%S') }}</td>
+          <td>{{ t.username }}</td>
+          <td class="mono">{{ t.ip_address }}</td>
+          <td>{% if t.success %}<span class="badge badge-green">Réussie</span>{% else %}<span class="badge badge-red">Échec</span>{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="4">Aucune tentative récente</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Alertes de sécurité</h2><span class="count">{{ alerts|length }}</span></div>
+  <div class="panel-body">
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>Gravité</th><th>Règle</th><th>Description</th></tr></thead>
+      <tbody>
+        {% for a in alerts %}
+        <tr>
+          <td class="mono">{{ a.created_at.strftime('%d/%m %H:%M') }}</td>
+          <td>
+            {% if a.severity in ('CRITICAL','HIGH') %}<span class="badge badge-red">{{ a.severity }}</span>
+            {% elif a.severity == 'MEDIUM' %}<span class="badge badge-amber">{{ a.severity }}</span>
+            {% else %}<span class="badge badge-gray">{{ a.severity }}</span>{% endif %}
+          </td>
+          <td class="mono">{{ a.rule_code }}</td>
+          <td>{{ a.description }}</td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="4">Aucune alerte</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="foot">🔒 Lecture seule : aucune modification des journaux n'est possible (droits + triggers d'ajout seul).</div>
+{% endblock %}

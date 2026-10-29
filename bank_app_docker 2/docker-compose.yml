@@ -1,0 +1,54 @@
+# ============================================================================
+name: bank_app_v2  
+#  Banking and Account Management System — stack Docker (universelle)
+#  Fonctionne à l'identique sur Windows, macOS et Linux avec Docker Desktop
+#  ou Docker Engine + Compose v2.
+#
+#  Démarrage :  docker compose up -d --build
+#  Arrêt     :  docker compose down            (ajouter -v pour effacer les données)
+# ============================================================================
+services:
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres_admin_pw}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d/sql:ro
+      - ./docker/00-init.sh:/docker-entrypoint-initdb.d/00-init.sh:ro
+    ports:
+      - "5433:5432"          # permet de se connecter avec psql/pgAdmin depuis l'hôte
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bank_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # --- connexion applicative (Flask -> PostgreSQL, via le compte app_backend) ---
+      DB_HOST: db
+      DB_PASSWORD: Backend#Demo2026
+      DB_SSLMODE: disable          # pas de certificat TLS dans l'image postgres officielle
+      ENC_KEY: DEMO-ONLY-KEY-2026-CHANGE-ME
+      FLASK_SECRET: ${FLASK_SECRET:-change-me-please-32-bytes-minimum-dev-only}
+      COOKIE_SECURE: "0"           # mettre à "1" si l'app est servie derrière HTTPS
+      # --- connexion DBA utilisée par seed_users.py et les scripts de tests/tests/*.sh ---
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres_admin_pw}
+      PGSSLMODE: disable
+    ports:
+      - "5002:5000"
+
+volumes:
+  pgdata:

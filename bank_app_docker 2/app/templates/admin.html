@@ -1,0 +1,64 @@
+{% extends "base.html" %}{% block title %}Administration{% endblock %}
+{% block body %}
+<div class="page-header">
+  <h1>Administration</h1>
+  <div class="meta">Vue d'ensemble du système</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="label">Comptes bancaires</div><div class="value">{{ n_accounts }}</div></div>
+  <div class="kpi"><div class="label">Utilisateurs actifs</div><div class="value">{{ n_users }}</div></div>
+  <div class="kpi accent-{{ 'red' if n_alerts else 'green' }}"><div class="label">Alertes ouvertes</div><div class="value">{{ n_alerts }}</div></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Alertes récentes</h2><span class="count">{{ alerts|length }}</span></div>
+  <div class="panel-body">
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>Gravité</th><th>Règle</th><th>Description</th></tr></thead>
+      <tbody>
+        {% for a in alerts %}
+        <tr>
+          <td class="mono">{{ a.created_at.strftime('%d/%m %H:%M') }}</td>
+          <td>
+            {% if a.severity in ('CRITICAL','HIGH') %}<span class="badge badge-red">{{ a.severity }}</span>
+            {% elif a.severity == 'MEDIUM' %}<span class="badge badge-amber">{{ a.severity }}</span>
+            {% else %}<span class="badge badge-gray">{{ a.severity }}</span>{% endif %}
+          </td>
+          <td class="mono">{{ a.rule_code }}</td>
+          <td>{{ a.description }}</td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="4">Aucune alerte récente</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Journal d'audit</h2><span class="count">{{ audit|length }}</span></div>
+  <div class="panel-body">
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>Action</th><th>Table</th><th>Résultat</th></tr></thead>
+      <tbody>
+        {% for l in audit %}
+        <tr>
+          <td class="mono">{{ l.timestamp.strftime('%d/%m %H:%M:%S') }}</td>
+          <td>{{ l.action }}</td>
+          <td class="mono">{{ l.table_name }}</td>
+          <td>
+            {% if l.result == 'SUCCESS' %}<span class="badge badge-green">{{ l.result }}</span>
+            {% elif l.result in ('FAILED','REJECTED') %}<span class="badge badge-red">{{ l.result }}</span>
+            {% elif l.result == 'ALERT' %}<span class="badge badge-amber">{{ l.result }}</span>
+            {% else %}<span class="badge badge-gray">{{ l.result }}</span>{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="4">Aucune entrée d'audit</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

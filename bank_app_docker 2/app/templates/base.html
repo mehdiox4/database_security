@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Demo Bank{% endblock %} — Demo Bank</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='uir_logo.png') }}">
+</head>
+<body>
+{% if nav_user %}
+<header class="navbar">
+  <div class="brand">
+    <img src="{{ url_for('static', filename='uir_logo.png') }}" alt="Université Internationale de Rabat">
+    <div class="sep"></div>
+    <div>
+      <div class="title">Demo Bank</div>
+      <div class="subtitle">Database Security — UIR</div>
+    </div>
+  </div>
+  <nav>
+    {% if nav_user.role_name == 'ROLE_CLIENT' %}
+      <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">Mes comptes</a>
+    {% endif %}
+    {% if nav_user.role_name in ('ROLE_ADMIN', 'ROLE_MANAGER') %}
+      <a href="{{ url_for('admin') }}" class="{{ 'active' if request.endpoint == 'admin' else '' }}">Administration</a>
+    {% endif %}
+    {% if nav_user.role_name in ('ROLE_ADMIN', 'ROLE_AUDITOR') %}
+      <a href="{{ url_for('security') }}" class="{{ 'active' if request.endpoint == 'security' else '' }}">Sécurité</a>
+    {% endif %}
+  </nav>
+  <div class="user">
+    <div class="avatar">{{ nav_initials }}</div>
+    <div class="who">
+      <div class="name">{{ nav_name }}</div>
+      <div class="role">{{ nav_role_label }}</div>
+    </div>
+    <form method="post" action="{{ url_for('logout') }}" style="margin:0;">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <button type="submit" class="btn-logout" title="Se déconnecter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </form>
+  </div>
+</header>
+{% endif %}
+
+<div class="page">
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for c, m in msgs %}
+    <div class="alert alert-{{ c }}">
+      {% if c == 'success' %}✅{% elif c == 'danger' %}⛔{% elif c == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+      <div>{{ m }}</div>
+    </div>
+    {% endfor %}
+  {% endwith %}
+  {% block body %}{% endblock %}
+</div>
+</body>
+</html>

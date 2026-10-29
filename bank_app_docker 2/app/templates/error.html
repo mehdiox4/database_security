@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Erreur {{ code }} — Demo Bank</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="error-wrap">
+    <img src="{{ url_for('static', filename='uir_logo.png') }}" alt="UIR" style="height:48px; filter: invert(20%) sepia(30%) saturate(900%) hue-rotate(185deg);">
+    <div class="code">{{ code }}</div>
+    <p>
+      {% if code == 403 %}Vous n'avez pas les droits nécessaires pour accéder à cette page.
+      {% elif code == 404 %}Cette page n'existe pas.
+      {% elif code == 400 %}Requête invalide ou session expirée — merci de réessayer.
+      {% elif code == 423 %}Ce compte est temporairement verrouillé.
+      {% else %}Une erreur est survenue. L'équipe technique a été notifiée.{% endif %}
+    </p>
+    <a href="/login" class="btn btn-primary">Retour à la connexion</a>
+  </div>
+</body>
+</html>
